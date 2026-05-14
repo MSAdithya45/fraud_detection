@@ -1,10 +1,4 @@
-# src/pipeline/train.py
-#
-# Run once from the project root:
-#   python src/pipeline/train.py
-#
-# Reads  : dataset.csv  (project root)
-# Writes : saved_models/*.pkl  and  saved_models/autoencoder_model.keras
+
 
 import sys
 from pathlib import Path

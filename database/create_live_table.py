@@ -2,25 +2,28 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 
 engine = create_engine(
     f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 )
+
+# Load small sample to infer schema
 df = pd.read_csv(
-    "./dataset/final_dataset_after_feature_selection_in_xgboost.csv"
+    "./dataset/final_dataset_after_feature_selection_in_xgboost.csv",
+    nrows=5
 )
 
-print("Dataset Shape:", df.shape)
-print(df.head())
 
+# Create table
 df.to_sql(
-    name="training_data",
+    name="new_transactions",
     con=engine,
     if_exists="replace",
-    index=False,
-    chunksize=1000   # Smaller stable chunks
+    index=False
 )
 
-print("Dataset uploaded successfully.")
+print("new_transactions table created successfully.")
