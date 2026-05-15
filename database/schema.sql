@@ -52,3 +52,18 @@ CREATE TABLE IF NOT EXISTS feedback_queue (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE developer_explanations (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    transaction_id BIGINT,
+
+    feature VARCHAR(255),
+
+    impact FLOAT,
+
+    absolute_impact FLOAT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
