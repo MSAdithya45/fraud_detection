@@ -22,6 +22,7 @@ SAVED_MODELS  = _REPO_ROOT / "saved_models"
 import sys
 sys.path.insert(0, str(_PIPELINE_DIR))
 
+
 # ─────────────────────────────────────────────────────────────
 # IMPORTS
 # ─────────────────────────────────────────────────────────────
@@ -40,7 +41,7 @@ from fraud_isolation_forest import (
 # DATABASE
 # ============================================================
 
-from database.transactions import insert_transaction
+from database.transactions import store_new_transaction
 
 # ============================================================
 # DRIFT MONITORING
@@ -50,8 +51,8 @@ from src.drift_monitoring.drift_aggregate import (
     aggregate_drift
 )
 
-
-
+from src.drift_monitoring.severity_router import (
+    determine_severity)
 
 
 # ============================================================
@@ -262,74 +263,62 @@ class FraudPipeline:
             prediction results
         """
 
-        # ====================================================
         # RULES ENGINE
         # ====================================================
 
-        rules_out = self.rules_engine.transform(
-            raw_df
-        )
+        rules_out = self.rules_engine.transform(raw_df)
+        print("rules_out TransactionID exists:", "TransactionID" in rules_out.columns)
 
         # ====================================================
         # PREPROCESSING
         # ====================================================
 
-        pp_out = self.preprocessor.transform(
-            rules_out
-        )
+        pp_out = self.preprocessor.transform(rules_out)
+        print("pp_out TransactionID exists:", "TransactionID" in pp_out.columns)
 
         # ====================================================
         # AE SCORE
         # ====================================================
 
-        ae_out = self.ae_scorer.transform(
-            pp_out
-        )
+        ae_out = self.ae_scorer.transform(pp_out)
+        print("ae_out TransactionID exists:", "TransactionID" in ae_out.columns)
 
         # ====================================================
         # ISO SCORE
         # ====================================================
 
-        iso_out = self.iso_scorer.transform(
-            pp_out
-        )
+        iso_out = self.iso_scorer.transform(pp_out)
+        print("iso_out TransactionID exists:", "TransactionID" in iso_out.columns)
 
         # ====================================================
         # MERGE AE + ISO
         # ====================================================
 
-        merged = merge_ae_iso(
-            ae_out,
-            iso_out
-        )
+        merged = merge_ae_iso(ae_out, iso_out)
+        print("merged TransactionID exists:", "TransactionID" in merged.columns)
 
         # ====================================================
         # DROP LOW FEATURES
         # ====================================================
 
-        dropped = drop_low_features(
-            merged
-        )
+        dropped = drop_low_features(merged)
+        print("dropped TransactionID exists:", "TransactionID" in dropped.columns)
 
         # ====================================================
         # ALIGN XGB FEATURES
         # ====================================================
 
-        xgb_input = self._align_for_xgb(
-            dropped
-        )
+        xgb_input = self._align_for_xgb(dropped)
+        print("xgb_input TransactionID exists:", "TransactionID" in xgb_input.columns)
 
         # ====================================================
         # XGB PREDICTION
         # ====================================================
 
-        preds = self.xgb_model.predict(
-            xgb_input
-        )
+        preds = self.xgb_model.predict(xgb_input)
 
-        probs = self.xgb_model.predict_proba(
-            xgb_input
-        )[:, 1]
+        probs = self.xgb_model.predict_proba(xgb_input)[:, 1]
+
 
         # ====================================================
         # SHAP EXPLANATION
@@ -364,32 +353,33 @@ class FraudPipeline:
         )
 
         # ====================================================
-        # PREPARE DB RECORD
+        # PREPARE DB RECORD FOR STORAGE
         # ====================================================
 
-        db_record = raw_df.iloc[0].to_dict()
+        # Use full aligned XGB input schema
+        db_record = xgb_input.copy()
 
-        db_record["prediction"] = int(preds[0])
+        # ====================================================
+        # ADD PREDICTION OUTPUTS
+        # ====================================================
 
-        db_record["probability"] = round(
-            float(probs[0]),
-            6
-        )
+        db_record["prediction"] = preds
 
-        db_record["label"] = (
+        db_record["probability"] = [
+            round(float(prob), 6)
+            for prob in probs
+        ]
 
-            "FRAUD"
-
-            if preds[0] == 1
-
-            else "LEGIT"
-        )
+        db_record["label"] = [
+            "FRAUD" if pred == 1 else "LEGIT"
+            for pred in preds
+        ]
 
         # ====================================================
         # INSERT TRANSACTION
         # ====================================================
 
-        row_count = insert_transaction(
+        row_count = store_new_transaction(
             db_record
         )
 
@@ -397,11 +387,11 @@ class FraudPipeline:
         # # DRIFT CHECK
         # # ====================================================
 
-        if row_count % 500 == 0:
+        if row_count % 10 == 0:
 
             print("=" * 60)
 
-            print("500 transactions reached.")
+            print("10 transactions reached.")
 
             print("Running drift monitoring...")
 
@@ -414,7 +404,7 @@ class FraudPipeline:
             drift_result = aggregate_drift()
 
             severity = determine_severity(
-                drift_result["final_drift_score"]
+                drift_result.iloc[0].to_dict()
             )
 
             print("Drift Result :", drift_result)
@@ -503,36 +493,10 @@ if __name__ == "__main__":
 
     pipeline = FraudPipeline.load()
 
-    for label, mask in [
-
-        ("FRAUD", df['isFraud'] == 1),
-
-        ("LEGIT", df['isFraud'] == 0)
-    ]:
-
-        row = (
-
-            df[mask]
-
-            .sample(1, random_state=42)
-
-            .drop(
-                columns=['isFraud'],
-                errors='ignore'
-            )
-        )
-
-        result = pipeline.predict(row)
-
-        print(
-            f"\n[{label}] "
-            f"prediction={result[0]['label']} "
-            f"prob={result[0]['probability']}"
-        )
-
+  
 
 # ============================================================
-# BULK TRANSACTION TEST
+# BULK TRANSACTION TEST (STRICTLY FIRST 500 ONLY)
 # ============================================================
 
 if __name__ == "__main__":
@@ -542,13 +506,16 @@ if __name__ == "__main__":
     )
 
     # ========================================================
-    # LOAD DATASET
+    # LOAD ONLY FIRST 500 ROWS DIRECTLY
     # ========================================================
 
-    df = pd.read_csv(dataset_path)
+    df = pd.read_csv(
+        dataset_path,
+        nrows=21
+    )
 
     print("=" * 60)
-    print(f"Dataset shape : {df.shape}")
+    print(f"Loaded Dataset Shape : {df.shape}")
     print("=" * 60)
 
     # ========================================================
@@ -560,15 +527,11 @@ if __name__ == "__main__":
         errors="ignore"
     )
 
-    # ========================================================
-    # TAKE FIRST 500 TRANSACTIONS
-    # ========================================================
-
-    prediction_df = prediction_df.head(500)
+    total_transactions = len(prediction_df)
 
     print(
         f"Running predictions on "
-        f"{len(prediction_df)} transactions..."
+        f"{total_transactions} transactions..."
     )
 
     print("=" * 60)
@@ -580,10 +543,10 @@ if __name__ == "__main__":
     pipeline = FraudPipeline.load()
 
     # ========================================================
-    # LOOP THROUGH TRANSACTIONS
+    # LOOP THROUGH EXACT 500 TRANSACTIONS
     # ========================================================
 
-    for idx in range(len(prediction_df)):
+    for idx in range(total_transactions):
 
         row = prediction_df.iloc[[idx]]
 
@@ -599,12 +562,14 @@ if __name__ == "__main__":
         )
 
         print(
-            f"[{idx+1}/500] "
+            f"[{idx+1}/{total_transactions}] "
             f"TransactionID={transaction_id} | "
             f"Prediction={result[0]['label']} | "
             f"Probability={result[0]['probability']}"
         )
 
     print("=" * 60)
-    print("500 transaction predictions completed.")
+    print(
+        f"{total_transactions} transaction predictions completed."
+    )
     print("=" * 60)

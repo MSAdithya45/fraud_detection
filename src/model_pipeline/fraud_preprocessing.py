@@ -92,7 +92,7 @@ class PreprocessingPipeline:
         df = df.drop(columns=[c for c in self.cat_cols if c in df.columns], errors='ignore')
 
         cols_to_remove = [
-            'D3', 'D2', 'TransactionID',
+            'D3', 'D2',
             'id_06_is_missing', 'D2_is_missing', 'D3_is_missing', 'id_05_is_missing',
         ]
         df = df.drop(columns=[c for c in cols_to_remove if c in df.columns], errors='ignore')

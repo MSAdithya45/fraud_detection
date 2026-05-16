@@ -5,10 +5,12 @@ CREATE TABLE IF NOT EXISTS drift_analysis_log (
     batch_start_id INT,
     batch_end_id INT,
 
-    psi_score FLOAT,
-    ks_score FLOAT,
-
     final_drift_score FLOAT,
+
+    iso_drift_score FLOAT,
+    ae_drift_score FLOAT,
+    rules_drift_score FLOAT,
+    feature_drift_score FLOAT,
 
     severity VARCHAR(20),
 
@@ -24,16 +26,17 @@ CREATE TABLE IF NOT EXISTS medium_severity_watchlist (
     batch_start_id INT,
     batch_end_id INT,
 
-    psi_score FLOAT,
-    ks_score FLOAT,
-
     final_drift_score FLOAT,
+
+    iso_drift_score FLOAT,
+    ae_drift_score FLOAT,
+    rules_drift_score FLOAT,
+    feature_drift_score FLOAT,
 
     monitoring_status VARCHAR(20) DEFAULT 'ACTIVE',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 
 CREATE TABLE IF NOT EXISTS feedback_queue (
@@ -53,7 +56,7 @@ CREATE TABLE IF NOT EXISTS feedback_queue (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE developer_explanations (
+CREATE TABLE IF NOT EXISTS developer_explanations (
 
     id INT AUTO_INCREMENT PRIMARY KEY,
 

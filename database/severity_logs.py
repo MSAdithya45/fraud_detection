@@ -1,9 +1,10 @@
 import os
 import pandas as pd
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 from dotenv import load_dotenv
+
 
 # ============================================================
 # ENV
@@ -12,16 +13,36 @@ from dotenv import load_dotenv
 load_dotenv()
 
 engine = create_engine(
-    f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+    f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@"
+    f"{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 )
+
+
+# ============================================================
+# CLEAR NEW TRANSACTIONS TABLE
+# ============================================================
+
+def clear_new_transactions():
+
+    with engine.connect() as conn:
+
+        conn.execute(
+            text(
+                "DELETE FROM new_transactions"
+            )
+        )
+
+        conn.commit()
+
+    print("new_transactions table cleared.")
+
 
 # ============================================================
 # LOW SEVERITY
 # ============================================================
 
-def log_low_severity(drift_result):
+def log_low_severity(df):
 
-    df = pd.DataFrame([drift_result])
 
     df.to_sql(
 
@@ -34,6 +55,12 @@ def log_low_severity(drift_result):
         index=False
     )
 
+    # ========================================================
+    # CLEAR DRIFT STACK AFTER STORAGE
+    # ========================================================
+
+    clear_new_transactions()
+
     print("LOW severity stored in drift_analysis_log")
 
 
@@ -41,9 +68,7 @@ def log_low_severity(drift_result):
 # MEDIUM SEVERITY
 # ============================================================
 
-def log_medium_severity(drift_result):
-
-    df = pd.DataFrame([drift_result])
+def log_medium_severity(df):
 
     df.to_sql(
 
@@ -55,5 +80,11 @@ def log_medium_severity(drift_result):
 
         index=False
     )
+
+    # ========================================================
+    # CLEAR DRIFT STACK AFTER STORAGE
+    # ========================================================
+
+    clear_new_transactions()
 
     print("MEDIUM severity stored in medium_severity_watchlist")
