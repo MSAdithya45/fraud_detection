@@ -9,8 +9,8 @@
     "p90": 0.00019875614141174504,
     "p95": 0.016141800586098196,
     "p99": 0.08118056533162187,
-    "warning_threshold": null,
-    "severe_threshold": null,
+    "warning_threshold": 0.10,
+    "severe_threshold": 0.25,
     "psi_bins": [
         -0.0825147555038594,
         -0.061595156069711214,

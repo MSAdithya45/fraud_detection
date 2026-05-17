@@ -9,8 +9,8 @@
         "p90": 4.0,
         "p95": 7.0,
         "p99": 1092.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "txn_count_1hr": {
         "mean": 14.866154070150381,
@@ -22,8 +22,8 @@
         "p90": 45.0,
         "p95": 71.0,
         "p99": 112.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "email_fraud_rate": {
         "mean": -0.018206600333728413,
@@ -35,8 +35,8 @@
         "p90": 0.115231085165786,
         "p95": 0.115231085165786,
         "p99": 0.160088938299055,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "C14": {
         "mean": 10.499684538212476,
@@ -48,8 +48,8 @@
         "p90": 2.0,
         "p95": 4.0,
         "p99": 465.679999999993,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "C13": {
         "mean": 20.517849590593,
@@ -61,8 +61,8 @@
         "p90": 5.0,
         "p95": 19.0,
         "p99": 659.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "addr1": {
         "mean": 172.02036288505406,
@@ -74,8 +74,8 @@
         "p90": 387.0,
         "p95": 465.0,
         "p99": 512.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "card3": {
         "mean": 161.50148717699832,
@@ -87,8 +87,8 @@
         "p90": 185.0,
         "p95": 185.0,
         "p99": 190.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "D8": {
         "mean": 75.39358380918398,
@@ -100,8 +100,8 @@
         "p90": 250.125,
         "p95": 457.7083435058594,
         "p99": 894.069992675781,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "id_17": {
         "mean": 183.02874515540827,
@@ -113,8 +113,8 @@
         "p90": 225.0,
         "p95": 225.0,
         "p99": 225.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "ProductCD_freq": {
         "mean": 0.3113317920737945,
@@ -126,8 +126,8 @@
         "p90": 0.4151456849184476,
         "p95": 0.4151456849184476,
         "p99": 0.4151456849184476,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "card2": {
         "mean": 388.8720126462044,
@@ -139,8 +139,8 @@
         "p90": 562.0,
         "p95": 583.0,
         "p99": 583.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "card6_freq": {
         "mean": 0.49999663235063213,
@@ -152,8 +152,8 @@
         "p90": 0.5235037179553845,
         "p95": 0.5235037179553845,
         "p99": 0.5235037179553845,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "TransactionAmt": {
         "mean": 83.55453259656251,
@@ -165,8 +165,8 @@
         "p90": 200.0,
         "p95": 250.0,
         "p99": 500.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "C11": {
         "mean": 20.35942537422088,
@@ -178,8 +178,8 @@
         "p90": 3.0,
         "p95": 5.0,
         "p99": 838.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "DeviceInfo_freq": {
         "mean": 0.17089701753962194,
@@ -191,8 +191,8 @@
         "p90": 0.3311060267276792,
         "p95": 0.3311060267276792,
         "p99": 0.3311060267276792,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "dist2": {
         "mean": 59.715113739574164,
@@ -204,8 +204,8 @@
         "p90": 101.0,
         "p95": 321.0,
         "p99": 1384.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "id_31_freq": {
         "mean": 0.0660741884570492,
@@ -217,8 +217,8 @@
         "p90": 0.1893817274192709,
         "p95": 0.1893817274192709,
         "p99": 0.1893817274192709,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     },
     "D1": {
         "mean": 29.26790678970832,
@@ -230,7 +230,7 @@
         "p90": 63.0,
         "p95": 262.0,
         "p99": 476.0,
-        "warning_threshold": null,
-        "severe_threshold": null
+        "warning_threshold": 0.10,
+        "severe_threshold": 0.25
     }
 }

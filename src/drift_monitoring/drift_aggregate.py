@@ -30,13 +30,13 @@ def aggregate_drift():
 
     final_drift_score = (
 
-        0.30 * rules_result["drift_score"] +
+        0.33 * rules_result["drift_score"] +
 
-        0.25 * iso_result["drift_score"] +
+        0.15 * iso_result["drift_score"] +
 
-        0.25 * ae_result["drift_score"] +
+        0.07 * ae_result["drift_score"] +
 
-        0.20 * feature_result["feature_drift_score"]
+        0.45 * feature_result["feature_drift_score"]
 
     )
 

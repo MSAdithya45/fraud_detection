@@ -23,14 +23,14 @@ def determine_severity(drift_result):
     # LOW DRIFT
     # ====================================================
 
-    if final_drift_score < 0.30:
+    if final_drift_score < 0.10:
         return "LOW"
 
     # ====================================================
     # MEDIUM DRIFT
     # ====================================================
 
-    elif final_drift_score < 0.60:
+    elif final_drift_score <= 0.5:
         return "MEDIUM"
 
     # ====================================================
@@ -38,4 +38,4 @@ def determine_severity(drift_result):
     # ====================================================
 
     else:
-        return "MEDIUM"
+        return "HIGH"

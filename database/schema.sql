@@ -1,9 +1,7 @@
 CREATE TABLE IF NOT EXISTS drift_analysis_log (
 
     id INT AUTO_INCREMENT PRIMARY KEY,
-
-    batch_start_id INT,
-    batch_end_id INT,
+    transaction_ids JSON,
 
     final_drift_score FLOAT,
 
@@ -23,8 +21,7 @@ CREATE TABLE IF NOT EXISTS medium_severity_watchlist (
 
     id INT AUTO_INCREMENT PRIMARY KEY,
 
-    batch_start_id INT,
-    batch_end_id INT,
+   transaction_ids JSON,
 
     final_drift_score FLOAT,
 
@@ -41,17 +38,18 @@ CREATE TABLE IF NOT EXISTS medium_severity_watchlist (
 
 CREATE TABLE IF NOT EXISTS feedback_queue (
 
-    id INT AUTO_INCREMENT PRIMARY KEY,
+     id INT AUTO_INCREMENT PRIMARY KEY,
 
-    batch_start_id INT,
-    batch_end_id INT,
-
-    psi_score FLOAT,
-    ks_score FLOAT,
+   transaction_ids JSON,
 
     final_drift_score FLOAT,
 
-    feedback_status VARCHAR(20) DEFAULT 'PENDING',
+    iso_drift_score FLOAT,
+    ae_drift_score FLOAT,
+    rules_drift_score FLOAT,
+    feature_drift_score FLOAT,
+
+    monitoring_status VARCHAR(20) DEFAULT 'ACTIVE',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

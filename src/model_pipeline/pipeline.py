@@ -73,8 +73,14 @@ from src.explainability.shap_monitor import (
 # ============================================================
 
 from database.severity_logs import (
+
     log_low_severity,
-    log_medium_severity
+    log_medium_severity,
+    log_high_severity
+)
+
+from database.raw_transactions import (
+    store_raw_transaction
 )
 
 # ============================================================
@@ -262,7 +268,13 @@ class FraudPipeline:
         Output:
             prediction results
         """
+        
+        
+        # ====================================================
+        # STORE RAW TRANSACTION
+        # ====================================================
 
+        store_raw_transaction(raw_df)
         # RULES ENGINE
         # ====================================================
 
@@ -358,6 +370,22 @@ class FraudPipeline:
 
         # Use full aligned XGB input schema
         db_record = xgb_input.copy()
+        # ====================================================
+        # ADD TRANSACTION ID BACK
+        # ====================================================
+
+        if "TransactionID" in raw_df.columns:
+
+            db_record = pd.concat(
+
+                [
+                    raw_df[["TransactionID"]].reset_index(drop=True),
+
+                    db_record.reset_index(drop=True)
+                ],
+
+                axis=1
+            )
 
         # ====================================================
         # ADD PREDICTION OUTPUTS
@@ -441,9 +469,11 @@ class FraudPipeline:
 
                 print("HIGH SEVERITY DETECTED")
 
-                print("Feedback Loop")
-
                 print("=" * 60)
+
+                log_high_severity(
+                    drift_result
+    )
 
         else:
 
