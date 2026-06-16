@@ -105,3 +105,34 @@ def store_new_transaction(db_record):
     # ========================================================
 
     return row_count
+
+
+#permanent table store for llm api call and to display on the dashboard
+
+def store_transaction_analysis(df):
+
+    inspector = inspect(engine)
+
+    table_name = "transaction_analysis"
+
+    if not inspector.has_table(table_name):
+
+        # create schema automatically from dataframe
+        df.head(0).to_sql(
+            table_name,
+            con=engine,
+            if_exists="replace",
+            index=False
+        )
+
+        print("transaction_analysis table created")
+
+    df.to_sql(
+        table_name,
+        con=engine,
+        if_exists="append",
+        index=False
+    )
+
+    print(f"{len(df)} rows inserted")
+

@@ -68,3 +68,14 @@ CREATE TABLE IF NOT EXISTS developer_explanations (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+
+CREATE TABLE IF NOT EXISTS llm_explanations (
+
+    transaction_id BIGINT PRIMARY KEY,
+
+    explanation LONGTEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

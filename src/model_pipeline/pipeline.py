@@ -41,7 +41,10 @@ from fraud_isolation_forest import (
 # DATABASE
 # ============================================================
 
-from database.transactions import store_new_transaction
+from database.transactions import (
+    store_new_transaction,
+    store_transaction_analysis
+)
 
 # ============================================================
 # DRIFT MONITORING
@@ -80,7 +83,7 @@ from database.severity_logs import (
 )
 
 from database.raw_transactions import (
-    store_raw_transaction
+    store_raw_transaction,
 )
 
 # ============================================================
@@ -404,8 +407,13 @@ class FraudPipeline:
         ]
 
         # ====================================================
-        # INSERT TRANSACTION
+        # INSERT TRANSACTION in dashboard table
         # ====================================================
+        store_transaction_analysis(
+                db_record
+        )
+
+        ###### INSERT in BUFFER TABLE
 
         row_count = store_new_transaction(
             db_record
