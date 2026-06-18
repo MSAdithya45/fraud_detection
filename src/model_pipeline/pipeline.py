@@ -423,11 +423,11 @@ class FraudPipeline:
         # # DRIFT CHECK
         # # ====================================================
 
-        if row_count % 10 == 0:
+        if row_count % 500 == 0:
 
             print("=" * 60)
 
-            print("10 transactions reached.")
+            print("500 transactions reached.")
 
             print("Running drift monitoring...")
 
@@ -513,101 +513,3 @@ class FraudPipeline:
 
             for i in range(len(raw_df))
         ]
-
-
-# ============================================================
-# QUICK TEST
-# ============================================================
-
-if __name__ == "__main__":
-
-    dataset_path = (
-        _REPO_ROOT / "dataset/dataset.csv"
-    )
-
-    df = pd.read_csv(dataset_path)
-
-    print(f"Dataset shape : {df.shape}")
-
-    pipeline = FraudPipeline.load()
-
-  
-
-# ============================================================
-# BULK TRANSACTION TEST (STRICTLY FIRST 500 ONLY)
-# ============================================================
-
-if __name__ == "__main__":
-
-    dataset_path = (
-        _REPO_ROOT / "dataset/dataset.csv"
-    )
-
-    # ========================================================
-    # LOAD ONLY FIRST 500 ROWS DIRECTLY
-    # ========================================================
-
-    df = pd.read_csv(
-        dataset_path,
-        nrows=21
-    )
-
-    print("=" * 60)
-    print(f"Loaded Dataset Shape : {df.shape}")
-    print("=" * 60)
-
-    # ========================================================
-    # REMOVE TARGET COLUMN
-    # ========================================================
-
-    prediction_df = df.drop(
-        columns=["isFraud"],
-        errors="ignore"
-    )
-
-    total_transactions = len(prediction_df)
-
-    print(
-        f"Running predictions on "
-        f"{total_transactions} transactions..."
-    )
-
-    print("=" * 60)
-
-    # ========================================================
-    # LOAD PIPELINE
-    # ========================================================
-
-    pipeline = FraudPipeline.load()
-
-    # ========================================================
-    # LOOP THROUGH EXACT 500 TRANSACTIONS
-    # ========================================================
-
-    for idx in range(total_transactions):
-
-        row = prediction_df.iloc[[idx]]
-
-        result = pipeline.predict(row)
-
-        transaction_id = (
-
-            row["TransactionID"].iloc[0]
-
-            if "TransactionID" in row.columns
-
-            else idx
-        )
-
-        print(
-            f"[{idx+1}/{total_transactions}] "
-            f"TransactionID={transaction_id} | "
-            f"Prediction={result[0]['label']} | "
-            f"Probability={result[0]['probability']}"
-        )
-
-    print("=" * 60)
-    print(
-        f"{total_transactions} transaction predictions completed."
-    )
-    print("=" * 60)

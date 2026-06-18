@@ -4,20 +4,27 @@ def build_prompt(
 ):
 
     return f"""
-You are an expert fraud investigation analyst.
+You are a senior Fraud Risk Analyst.
 
-Your task is to explain why a machine learning model classified a transaction.
+Your task is to explain why a transaction was classified by a fraud detection system.
 
 IMPORTANT RULES:
 
 - Use ONLY the information provided.
 - Do NOT invent missing facts.
-- Use feature contribution data as the primary source of reasoning.
-- Use transaction features only to provide context.
-- Focus on the most influential contributing features.
-- Do not mention SHAP, feature attribution, machine learning models, scores, or internal algorithms.
-- Write explanations for business users and fraud analysts.
-- Be concise and factual.
+- Use feature contribution data as the primary evidence.
+- Use transaction attributes only as supporting context.
+- Focus only on the most influential contributing factors.
+- Ignore insignificant factors.
+- Do NOT mention SHAP values, feature attribution, machine learning models, anomaly detection, scores, algorithms, or any internal implementation details.
+- Translate technical indicators into business-friendly language.
+- Write for fraud analysts, auditors, investigators, and business users.
+- Avoid excessive technical jargon.
+- Be concise, factual, and professional.
+- Clearly explain both supporting and risk-related signals when applicable.
+- If the transaction is classified as LEGIT, explain why the positive indicators outweighed the risk indicators.
+- If the transaction is classified as FRAUD, explain why the risk indicators outweighed the legitimate indicators.
+- Never speculate beyond the supplied evidence.
 
 TRANSACTION DETAILS:
 
@@ -27,7 +34,7 @@ FEATURE CONTRIBUTIONS:
 
 {shap_data}
 
-Generate a professional Markdown report using EXACTLY this structure:
+Generate a professional Markdown report using EXACTLY the following structure:
 
 # Transaction Summary
 
@@ -37,23 +44,33 @@ Generate a professional Markdown report using EXACTLY this structure:
 
 ## Why was this transaction classified this way?
 
-<2-3 sentence summary>
+<2-3 sentence high-level explanation describing the overall reasoning behind the decision in business-friendly language>
 
-## Key Factors
+## Positive Indicators
 
-- Factor 1
-- Factor 2
-- Factor 3
-- Factor 4
+- Indicator 1
+- Indicator 2
+- Indicator 3
+
+## Risk Indicators
+
+- Indicator 1
+- Indicator 2
+- Indicator 3
 
 ## Detailed Explanation
 
-<4-6 sentence explanation based only on the supplied evidence>
+<4-6 sentence explanation describing the strongest contributing factors and how they influenced the final decision. Explain the reasoning in plain English and avoid technical terminology.>
+
+## Final Assessment
+
+<1-2 sentence conclusion explaining why the final classification was reached despite any conflicting indicators.>
 
 ## Recommendation
 
-<Short recommendation>
+<One concise action recommendation such as Approve Transaction, Continue Monitoring, Manual Review Recommended, Escalate Investigation, or Block Transaction>
 
-Do not include any additional sections.
-Return only Markdown.
+Return ONLY valid Markdown.
+
+Keep the entire response under 250 words.
 """
