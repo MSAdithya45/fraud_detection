@@ -1,0 +1,86 @@
+// ============================================================
+// Prisma schema  —  Supabase (PostgreSQL)
+// ============================================================
+//
+// SCOPE: Prisma manages ONLY the stable, hand-defined tables below.
+// The Python app uses SQLAlchemy + pandas for all runtime data access.
+//
+// The wide, dynamically-created tables — raw_transactions_staging,
+// processed_transactions_staging, raw_transactions_history,
+// processed_transactions_history — are created at runtime by pandas
+// (to_sql / CREATE TABLE ... LIKE) and are intentionally NOT modelled here.
+//
+// >>> NEVER run `prisma migrate reset` or `prisma db push` against this
+// >>> database — they drop the unmanaged pandas tables. Use
+// >>> `prisma migrate deploy` only.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ------------------------------------------------------------
+// Drift / severity tables (one row per analysed chunk).
+// All three share an identical, normalized schema.
+// ------------------------------------------------------------
+
+model drift_low_severity {
+  id                  Int       @id @default(autoincrement())
+  transaction_ids     Json?
+  iso_drift_score     Float?
+  ae_drift_score      Float?
+  rules_drift_score   Float?
+  feature_drift_score Float?
+  final_drift_score   Float?
+  monitoring_status   String?   @default("ACTIVE") @db.VarChar(20)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model drift_medium_severity {
+  id                  Int       @id @default(autoincrement())
+  transaction_ids     Json?
+  iso_drift_score     Float?
+  ae_drift_score      Float?
+  rules_drift_score   Float?
+  feature_drift_score Float?
+  final_drift_score   Float?
+  monitoring_status   String?   @default("ACTIVE") @db.VarChar(20)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model drift_high_severity {
+  id                  Int       @id @default(autoincrement())
+  transaction_ids     Json?
+  iso_drift_score     Float?
+  ae_drift_score      Float?
+  rules_drift_score   Float?
+  feature_drift_score Float?
+  final_drift_score   Float?
+  monitoring_status   String?   @default("ACTIVE") @db.VarChar(20)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+}
+
+// ------------------------------------------------------------
+// Explainability tables (unchanged)
+// ------------------------------------------------------------
+
+model developer_explanations {
+  id              Int       @id @default(autoincrement())
+  transaction_id  BigInt?
+  feature         String?   @db.VarChar(255)
+  impact          Float?
+  absolute_impact Float?
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model llm_explanations {
+  transaction_id BigInt    @id
+  explanation    String?   @db.Text
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+}

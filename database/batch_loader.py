@@ -1,20 +1,22 @@
 import pandas as pd
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
-import os
-load_dotenv()
+
+from database.connection import get_engine
+
+engine = get_engine()
 
 
+# ============================================================
+# LOAD RECENT TRANSACTIONS FOR DRIFT
+# ============================================================
+# Drift monitoring runs on the current processed staging buffer,
+# which holds at most one chunk (~30 rows) before it is flushed.
+# ============================================================
 
-engine = create_engine(
-    f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-)
-
-def load_recent_transactions(limit=500):
+def load_recent_transactions(limit=30):
 
     query = f"""
     SELECT *
-    FROM new_transactions
+    FROM processed_transactions_staging
     LIMIT {limit}
     """
 

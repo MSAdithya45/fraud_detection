@@ -10,7 +10,7 @@ from src.llm.gemini_client import (
     generate_explanation
 )
 
-from database.transactions import engine
+from database.transactions import engine, read_processed
 
 
 # ============================================================
@@ -21,21 +21,10 @@ def fetch_transaction(
     transaction_id
 ):
 
-    query = text("""
-        SELECT *
-        FROM transaction_analysis
-        WHERE TransactionID = :transaction_id
-    """)
-
-    return pd.read_sql(
-
-        query,
-
-        engine,
-
-        params={
-            "transaction_id": transaction_id
-        }
+    return read_processed(
+        "*",
+        where='WHERE "TransactionID" = :tid',
+        params={"tid": transaction_id},
     )
 
 
@@ -97,6 +86,8 @@ def save_explanation(
             :transaction_id,
             :explanation
         )
+        ON CONFLICT (transaction_id)
+        DO UPDATE SET explanation = EXCLUDED.explanation
     """)
 
     with engine.begin() as conn:

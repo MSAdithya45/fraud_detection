@@ -1,0 +1,34 @@
+# ============================================================
+# Python dependencies
+# ============================================================
+# Baseline list derived from the imports used across the project.
+# Versions are intentionally unpinned EXCEPT where load-compatibility
+# matters — pin tensorflow / xgboost / scikit-learn to whatever was
+# used to train the artifacts in saved_models/ before deploying.
+
+# --- Database (Supabase / PostgreSQL) ---
+sqlalchemy
+psycopg2-binary          # PostgreSQL driver (replaces mysql-connector-python)
+python-dotenv
+
+# --- API ---
+fastapi
+uvicorn[standard]
+python-multipart         # required by FastAPI for file uploads (/predict)
+
+# --- Data / ML ---
+pandas
+numpy
+scipy
+scikit-learn
+xgboost
+tensorflow-cpu           # loads saved_models/autoencoder_model.keras (CPU-only = much smaller image)
+shap
+joblib
+
+# --- LLM ---
+google-generativeai
+
+# --- Dashboard ---
+streamlit
+matplotlib

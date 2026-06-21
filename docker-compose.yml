@@ -1,0 +1,39 @@
+# ============================================================
+# Fraud Detection — backend (FastAPI) + frontend (nginx)
+# Database is Supabase (external), connected via env vars.
+#
+# Variables are read from ./.env :
+#   DATABASE_URL, DIRECT_URL, GEMINI_API_KEY   (required)
+#   DOCKERHUB_USER                              (for build/push image names)
+#   VITE_API_BASE_URL, CORS_ORIGINS            (optional overrides)
+# ============================================================
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKERHUB_USER:-yourusername}/fraud-detection-backend:latest
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DIRECT_URL: ${DIRECT_URL}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the bundle at build time — must be the URL the browser
+        # uses to reach the backend.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    image: ${DOCKERHUB_USER:-yourusername}/fraud-detection-frontend:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

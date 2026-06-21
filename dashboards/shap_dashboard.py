@@ -12,9 +12,9 @@ import os
 
 load_dotenv()
 
-engine = create_engine(
-    f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-)
+from database.connection import get_engine
+
+engine = get_engine()
 
 # ==========================================================
 # PAGE

@@ -21,6 +21,9 @@ SAVED_MODELS  = _REPO_ROOT / "saved_models"
 
 import sys
 sys.path.insert(0, str(_PIPELINE_DIR))
+# Also expose the repo root so `database.*` and `src.*` resolve when this
+# file is run directly (`python src/model_pipeline/pipeline.py`).
+sys.path.insert(0, str(_REPO_ROOT))
 
 
 # ─────────────────────────────────────────────────────────────
@@ -42,8 +45,7 @@ from fraud_isolation_forest import (
 # ============================================================
 
 from database.transactions import (
-    store_new_transaction,
-    store_transaction_analysis
+    store_processed_transaction
 )
 
 # ============================================================
@@ -85,6 +87,11 @@ from database.severity_logs import (
 from database.raw_transactions import (
     store_raw_transaction,
 )
+
+
+# Number of buffered transactions that triggers a drift run + chunk flush.
+DRIFT_BATCH_SIZE = 30
+
 
 # ============================================================
 # FRAUD PIPELINE
@@ -274,10 +281,6 @@ class FraudPipeline:
         
         
         # ====================================================
-        # STORE RAW TRANSACTION
-        # ====================================================
-
-        store_raw_transaction(raw_df)
         # RULES ENGINE
         # ====================================================
 
@@ -407,27 +410,27 @@ class FraudPipeline:
         ]
 
         # ====================================================
-        # INSERT TRANSACTION in dashboard table
+        # STORE RAW + PROCESSED TOGETHER
+        # Raw is stored here (not at the start) so that if any
+        # processing step above fails, NEITHER staging buffer gets
+        # the row — keeping raw and processed staging in lockstep.
         # ====================================================
-        store_transaction_analysis(
-                db_record
-        )
 
-        ###### INSERT in BUFFER TABLE
+        store_raw_transaction(raw_df)
 
-        row_count = store_new_transaction(
+        row_count = store_processed_transaction(
             db_record
         )
 
         # ====================================================
-        # # DRIFT CHECK
+        # # DRIFT CHECK  (every 30 buffered rows)
         # # ====================================================
 
-        if row_count % 500 == 0:
+        if row_count >= DRIFT_BATCH_SIZE:
 
             print("=" * 60)
 
-            print("500 transactions reached.")
+            print(f"{DRIFT_BATCH_SIZE} transactions reached.")
 
             print("Running drift monitoring...")
 

@@ -1,13 +1,19 @@
 import os
+import sys
+
+# Allow running this file directly (`python database/upload_dataset.py`) by
+# putting the project root on sys.path so `database` is importable.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import pandas as pd
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 load_dotenv()
 
 
-engine = create_engine(
-    f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-)
+from database.connection import get_engine
+
+engine = get_engine()
 df = pd.read_csv(
     "./dataset/final_dataset_after_feature_selection_in_xgboost.csv"
 )
