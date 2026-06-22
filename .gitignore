@@ -1,3 +1,6 @@
 .env
 __pycache__/
 dataset/
+
+# Node / Prisma tooling
+node_modules/

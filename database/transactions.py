@@ -1,138 +1,82 @@
-import os
 import pandas as pd
 
-from sqlalchemy import create_engine
-from sqlalchemy import inspect,text
+from sqlalchemy import inspect, text
 
-from dotenv import load_dotenv
+from database.connection import get_engine, ensure_unique_transaction_id
+
 
 # ============================================================
-# ENV
+# ENGINE
+# ============================================================
+# `engine` is imported by src/api/routes.py and
+# src/llm/explanation_service.py — keep it exported.
 # ============================================================
 
-load_dotenv()
+engine = get_engine()
 
-engine = create_engine(
-    f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-)
-
+PROCESSED_STAGING = "processed_transactions_staging"
+PROCESSED_HISTORY = "processed_transactions_history"
 
 
-# ====================================================
-# DB STORAGE FUNCTION FOR DRIFT STACK
-# ====================================================
+# ============================================================
+# STORE PROCESSED TRANSACTION  ->  processed_transactions_staging
+# ============================================================
 
-def store_new_transaction(db_record):
+def store_processed_transaction(db_record):
+    """Append a fully-processed record (features + AE/ISO scores +
+    prediction/probability/label) to the processed staging buffer and
+    return the buffer's current row count.
 
-    table_name = "new_transactions"
+    The table is auto-created on the first insert.
+    """
 
-    inspector = inspect(engine)
+    db_record.to_sql(
+        name=PROCESSED_STAGING,
+        con=engine,
+        if_exists="append",
+        index=False,
+    )
 
-    # ====================================================
-    # CREATE TABLE + INSERT FIRST RECORDS IF NOT EXISTS
-    # ====================================================
-
-    if not inspector.has_table(table_name):
-
-        db_record.to_sql(
-            name=table_name,
-            con=engine,
-            if_exists="replace",
-            index=False
-        )
-
-        print(
-            f"{table_name} table created successfully "
-            f"with {len(db_record)} initial record(s)."
-        )
-
-    # ====================================================
-    # TABLE EXISTS -> APPEND NEW RECORDS
-    # ====================================================
-
-    else:
-
-        existing_columns = [
-            col["name"] for col in inspector.get_columns(table_name)
-        ]
-
-        incoming_columns = db_record.columns.tolist()
-
-        missing_cols = set(existing_columns) - set(incoming_columns)
-        extra_cols = set(incoming_columns) - set(existing_columns)
-
-        if missing_cols or extra_cols:
-
-            raise ValueError(
-                f"Schema mismatch!\n"
-                f"Missing columns: {missing_cols}\n"
-                f"Extra columns: {extra_cols}"
-            )
-
-        # Align incoming dataframe with DB schema
-        db_record = db_record[existing_columns]
-
-        db_record.to_sql(
-            name="new_transactions",
-            con=engine,
-            if_exists="append",
-            index=False
-        )
-
-        print(
-            f"{len(db_record)} new record(s) appended "
-            f"to {table_name}."
-        )
-
-    # ========================================================
-    # CHECK TOTAL ROW COUNT
-    # ========================================================
+    # Enforce one row per TransactionID (no-op once the index exists).
+    ensure_unique_transaction_id(PROCESSED_STAGING)
 
     with engine.connect() as conn:
-
-        result = conn.execute(
-            text(
-                f"SELECT COUNT(*) FROM {table_name}"
-            )
-        )
-
-        row_count = result.scalar()
-
-    print(f"Current Rows : {row_count}")
-
-    # ========================================================
-    # RETURN ROW COUNT
-    # ========================================================
+        row_count = conn.execute(
+            text(f'SELECT COUNT(*) FROM {PROCESSED_STAGING}')
+        ).scalar()
 
     return row_count
 
 
-#permanent table store for llm api call and to display on the dashboard
+# ============================================================
+# READ PROCESSED  (history + current staging buffer)
+# ============================================================
 
-def store_transaction_analysis(df):
-
+def _existing_processed_tables():
     inspector = inspect(engine)
+    return [
+        t for t in (PROCESSED_HISTORY, PROCESSED_STAGING)
+        if inspector.has_table(t)
+    ]
 
-    table_name = "transaction_analysis"
 
-    if not inspector.has_table(table_name):
+def read_processed(columns="*", where="", params=None, order=""):
+    """Read prediction rows from the processed history UNION the current
+    staging buffer, so freshly-scored transactions appear immediately
+    (before their chunk is flushed to history).
 
-        # create schema automatically from dataframe
-        df.head(0).to_sql(
-            table_name,
-            con=engine,
-            if_exists="replace",
-            index=False
-        )
+    Returns an empty DataFrame if neither table exists yet.
+    """
 
-        print("transaction_analysis table created")
+    tables = _existing_processed_tables()
 
-    df.to_sql(
-        table_name,
-        con=engine,
-        if_exists="append",
-        index=False
+    if not tables:
+        return pd.DataFrame()
+
+    union = " UNION ALL ".join(
+        f'SELECT {columns} FROM {t} {where}' for t in tables
     )
 
-    print(f"{len(df)} rows inserted")
+    sql = f'SELECT * FROM ({union}) u {order}' if order else union
 
+    return pd.read_sql(text(sql), engine, params=params)

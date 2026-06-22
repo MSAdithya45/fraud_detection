@@ -1,4 +1,10 @@
 import os
+import sys
+
+# Allow running this file directly (`python database/raw_data.py`) by
+# putting the project root on sys.path so `database` is importable.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import pandas as pd
 import numpy as np
 
@@ -12,11 +18,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-engine = create_engine(
-    f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
-    pool_pre_ping=True
-)
+from database.connection import get_engine
+
+engine = get_engine()
 
 
 # ============================================================

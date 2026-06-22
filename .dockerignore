@@ -1,0 +1,29 @@
+# Python
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Secrets (env is injected at runtime by compose / docker run)
+.env
+.env.*
+
+# Not needed at runtime
+dataset/
+frontend/
+node_modules/
+prisma/
+package.json
+package-lock.json
+docs/
+notebooks/
+baseline_generators/
+dashboards/
+.git/
+.gitignore
+*.md
+
+# NOTE: saved_models/ and baseline/ are intentionally NOT ignored — the
+# pipeline loads them at startup.

@@ -1,16 +1,13 @@
-import mysql.connector
 import os
+
+import psycopg2
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-conn = mysql.connector.connect(
-    host=os.getenv("DB_HOST"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    database=os.getenv("DB_NAME"),
-    port=int(os.getenv("DB_PORT", 3306))
-)
+# Raw psycopg2 connection against Supabase PostgreSQL.
+# (Kept for parity with the previous raw mysql.connector helper.)
+conn = psycopg2.connect(os.getenv("DATABASE_URL"))
 
 cursor = conn.cursor()

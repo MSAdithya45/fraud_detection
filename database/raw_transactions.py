@@ -1,99 +1,64 @@
-import os
 import pandas as pd
 
-from sqlalchemy import (
-    create_engine,
-    text,
-    inspect
-)
-
-from dotenv import load_dotenv
+from database.connection import get_engine, ensure_unique_transaction_id
 
 
 # ============================================================
-# ENV
+# ENGINE
 # ============================================================
 
-load_dotenv()
+engine = get_engine()
 
-engine = create_engine(
-    f"mysql+mysqlconnector://root:{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-)
+RAW_STAGING = "raw_transactions_staging"
+
+# IEEE-CIS training label. Real-time raw transactions arrive WITHOUT a
+# label, so we drop it if present before storing the raw record.
+LABEL_COLUMN = "isFraud"
 
 
 # ============================================================
-# STORE RAW TRANSACTION
+# STORE RAW TRANSACTION  ->  raw_transactions_staging
 # ============================================================
 
 def store_raw_transaction(raw_df):
-    # ========================================================
-    # CONVERT INPUT TO DATAFRAME
-    # ========================================================
+    # --------------------------------------------------------
+    # Normalize input to a DataFrame
+    # --------------------------------------------------------
 
     if isinstance(raw_df, dict):
-
         raw_df = pd.DataFrame([raw_df])
 
     elif isinstance(raw_df, pd.Series):
-
         raw_df = raw_df.to_frame().T
 
     elif isinstance(raw_df, pd.DataFrame):
-
         raw_df = raw_df.copy()
 
     else:
-
         raise ValueError(
             f"Unsupported raw_df type: {type(raw_df)}"
         )
 
-    table_name = "raw_new_transactions"
+    # --------------------------------------------------------
+    # Drop the training label if (and only if) it is present
+    # --------------------------------------------------------
 
-    inspector = inspect(engine)
+    raw_df = raw_df.drop(columns=[LABEL_COLUMN], errors="ignore")
 
-    with engine.connect() as conn:
-
-        # ====================================================
-        # CREATE TABLE USING data SCHEMA
-        # ====================================================
-
-        if not inspector.has_table(table_name):
-
-            conn.execute(
-                text(
-                    f"""
-                    CREATE TABLE {table_name}
-                    AS
-                    SELECT *
-                    FROM data
-                    WHERE 1=0
-                    """
-                )
-            )
-
-            conn.commit()
-
-            print(
-                f"{table_name} created successfully."
-            )
-
-    # ========================================================
-    # INSERT RAW ROWS
-    # ========================================================
+    # --------------------------------------------------------
+    # Append to the raw staging buffer.
+    # The table is auto-created on the first insert with the
+    # schema of the incoming (label-free) raw data.
+    # --------------------------------------------------------
 
     raw_df.to_sql(
-
-        name=table_name,
-
+        name=RAW_STAGING,
         con=engine,
-
         if_exists="append",
-
-        index=False
+        index=False,
     )
 
-    print(
-        "Raw transaction stored successfully."
-    )
+    # Enforce one row per TransactionID (no-op once the index exists).
+    ensure_unique_transaction_id(RAW_STAGING)
+
+    print("Raw transaction stored in raw_transactions_staging.")
